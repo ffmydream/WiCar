@@ -100,42 +100,46 @@ class MainActivity : AppCompatActivity() {
                 })
         )
         srvLeftButton.setOnTouchListener(
-            RepeatListener(300, 300,
+            RepeatListener(300, 100,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.hSrvAngle > 3)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle - 3
-                        ch.send("srv:horiz:${SrvAngle.hSrvAngle}:")
+                        ch.send("srvo:horiz:${SrvAngle.hSrvAngle}:")
+                        delay(5)
                     }
                 })
         )
         srvRightButton.setOnTouchListener(
-            RepeatListener(300, 300,
+            RepeatListener(300, 100,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.hSrvAngle < 177)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle + 3
-                        ch.send("srv:horiz:${SrvAngle.hSrvAngle}:")
+                        ch.send("srvo:horiz:${SrvAngle.hSrvAngle}:")
+                        delay(5)
                     }
                 })
         )
         srvUpButton.setOnTouchListener(
-            RepeatListener(300, 300,
+            RepeatListener(300, 100,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.vSrvAngle < 170)
-                            SrvAngle.vSrvAngle = SrvAngle.vSrvAngle + 3
-                        ch.send("srv:vertic:${SrvAngle.vSrvAngle}:")
+                            SrvAngle.vSrvAngle = SrvAngle.vSrvAngle + 1
+                        ch.send("srvo:vertic:${SrvAngle.vSrvAngle}:")
+                        delay(5)
                     }
                 })
         )
         srvDownButton.setOnTouchListener(
-            RepeatListener(300, 300,
+            RepeatListener(300, 100,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.vSrvAngle > 60)
-                            SrvAngle.vSrvAngle = SrvAngle.vSrvAngle - 3
-                        ch.send("srv:vertic:${SrvAngle.vSrvAngle}:")
+                            SrvAngle.vSrvAngle = SrvAngle.vSrvAngle - 1
+                        ch.send("srvo:vertic:${SrvAngle.vSrvAngle}:")
+                        delay(5)
                     }
                 })
         )
