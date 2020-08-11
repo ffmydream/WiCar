@@ -1,8 +1,11 @@
 package com.example.wicar
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.webkit.WebViewClient
+import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
@@ -16,16 +19,16 @@ object SrvAngle {
 }
 
 class MainActivity : AppCompatActivity() {
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val ch = Channel<String>(0)
-        val url = "http://v.163.com/paike/V8H1BIE6U/VAG52A1KT.html"
+        val url = "http://192.168.1.166:8081"
 
         webView.settings.apply {
             javaScriptEnabled = true
             useWideViewPort = true
-
             loadWithOverviewMode = true
             allowFileAccess = true
             setSupportZoom(true)
@@ -33,8 +36,17 @@ class MainActivity : AppCompatActivity() {
         }
         webView.webViewClient = WebViewClient()
         webView.loadUrl(url)
-        CoroutineScope(Dispatchers.IO).launch {
+        camSwitch.setOnCheckedChangeListener { _, isChecked ->
+            CoroutineScope(Dispatchers.IO).launch {
+                if (isChecked) {
+                    ch.send("cmd:sudo motion:0:")
+                } else {
+                    ch.send("cmd:sudo pkill -KILL motion:0:")
+                }
+            }
+        }
 
+        CoroutineScope(Dispatchers.IO).launch {
             val os = Socket("192.168.1.2", 50000).getOutputStream()
             val pw = PrintWriter(os)
             while (true) {
@@ -116,12 +128,11 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
         )
-        srvInitButton.setOnClickListener(){
+        srvInitButton.setOnClickListener() {
             CoroutineScope(Dispatchers.IO).launch {
                 ch.send("srv:init:0:")
             }
         }
     }
-
 
 }
