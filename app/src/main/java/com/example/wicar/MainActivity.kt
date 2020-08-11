@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebViewClient
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
@@ -24,18 +26,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val ch = Channel<String>(0)
-        val url = "http://192.168.1.166:8081"
 
         webView.settings.apply {
             javaScriptEnabled = true
+            javaScriptCanOpenWindowsAutomatically = true
+            allowFileAccess = true // 设置允许访问文件数据
+            setSupportZoom(false)
+            builtInZoomControls = true
+            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+            domStorageEnabled = true
+            databaseEnabled = true
             useWideViewPort = true
             loadWithOverviewMode = true
-            allowFileAccess = true
-            setSupportZoom(true)
-            javaScriptCanOpenWindowsAutomatically = false
         }
-        webView.webViewClient = WebViewClient()
-        webView.loadUrl(url)
+        webView.webChromeClient = WebChromeClient()
+        webView.loadUrl("http://192.168.1.166:8081/")
         camSwitch.setOnCheckedChangeListener { _, isChecked ->
             CoroutineScope(Dispatchers.IO).launch {
                 if (isChecked) {
@@ -47,11 +52,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val os = Socket("192.168.1.2", 50000).getOutputStream()
-            val pw = PrintWriter(os)
-            while (true) {
-                pw.write(ch.receive())
-                pw.flush()
+
+            try {
+                val os = Socket("192.168.1.166", 50000).getOutputStream()
+                val pw = PrintWriter(os)
+                while (true) {
+                    pw.write(ch.receive())
+                    pw.flush()
+                }
+            } catch (e: Exception) {
+            } finally {
+
             }
         }
 
@@ -59,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             RepeatListener(300, 300,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
-                        ch.send("car:leftMotor:100")
+                        ch.send("car:left:100:")
                     }
                 })
         )
@@ -68,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             RepeatListener(300, 300,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
-                        ch.send("car:rightMotor:100")
+                        ch.send("car:right:100:")
                     }
                 })
         )
@@ -76,7 +87,7 @@ class MainActivity : AppCompatActivity() {
             RepeatListener(300, 300,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
-                        ch.send("car:forMotor:100")
+                        ch.send("car:for:100:")
                     }
                 })
         )
@@ -84,7 +95,7 @@ class MainActivity : AppCompatActivity() {
             RepeatListener(300, 300,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
-                        ch.send("car:backMotor:100")
+                        ch.send("car:back:100:")
                     }
                 })
         )
@@ -94,7 +105,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.hSrvAngle > 3)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle - 3
-                        ch.send("srv:left:${SrvAngle.hSrvAngle}")
+                        ch.send("srv:horiz:${SrvAngle.hSrvAngle}:")
                     }
                 })
         )
@@ -104,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.hSrvAngle < 177)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle + 3
-                        ch.send("srv:right:${SrvAngle.hSrvAngle}")
+                        ch.send("srv:horiz:${SrvAngle.hSrvAngle}:")
                     }
                 })
         )
@@ -114,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.vSrvAngle < 170)
                             SrvAngle.vSrvAngle = SrvAngle.vSrvAngle + 3
-                        ch.send("srv:up:${SrvAngle.vSrvAngle}")
+                        ch.send("srv:vertic:${SrvAngle.vSrvAngle}:")
                     }
                 })
         )
@@ -124,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.IO).launch {
                         if (SrvAngle.vSrvAngle > 60)
                             SrvAngle.vSrvAngle = SrvAngle.vSrvAngle - 3
-                        ch.send("srv:down:${SrvAngle.vSrvAngle}")
+                        ch.send("srv:vertic:${SrvAngle.vSrvAngle}:")
                     }
                 })
         )
