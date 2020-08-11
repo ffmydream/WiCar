@@ -116,8 +116,11 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
         )
-
-
+        srvInitButton.setOnClickListener(){
+            CoroutineScope(Dispatchers.IO).launch {
+                ch.send("srv:init:0:")
+            }
+        }
     }
 
 
