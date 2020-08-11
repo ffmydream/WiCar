@@ -73,7 +73,7 @@
         tools:src="@drawable/left" />
 
     <ImageButton
-        android:id="@+id/srvForButton"
+        android:id="@+id/srvUpButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
 
@@ -116,7 +116,7 @@
         tools:src="@drawable/right" />
 
     <ImageButton
-        android:id="@+id/srvBackButton"
+        android:id="@+id/srvDownButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
 
@@ -128,5 +128,15 @@
         app:layout_constraintBottom_toBottomOf="@+id/webView"
         app:layout_constraintEnd_toEndOf="parent"
         tools:src="@drawable/right" />
+
+    <Button
+        android:id="@+id/srvInitButton"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginEnd="70dp"
+        android:layout_marginBottom="70dp"
+        android:text="初始"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
