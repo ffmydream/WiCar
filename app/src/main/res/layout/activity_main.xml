@@ -135,7 +135,8 @@
         android:layout_height="80dp"
         android:layout_marginEnd="70dp"
         android:layout_marginBottom="70dp"
-        android:text="初始"
+        android:background="@drawable/roundbutton"
+        android:text="居中"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
