@@ -10,6 +10,7 @@ import android.webkit.WebSettings
 import android.webkit.WebViewClient
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.Preference
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -24,11 +25,14 @@ object SrvAngle {
 class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
+        val pref=Preference.DEFAULT_ORDER
+        val srvUrl="192.168.1.166"
+        val motionPort="8081"
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val ch = Channel<String>(0)
-
+        
         webView.settings.apply {
             javaScriptEnabled = true
             javaScriptCanOpenWindowsAutomatically = true
@@ -42,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             loadWithOverviewMode = true
         }
         webView.webChromeClient = WebChromeClient()
-        webView.loadUrl("http://192.168.1.166:8081/")
+        webView.loadUrl("http://$srvUrl:$motionPort/")
         camSwitch.setOnCheckedChangeListener { _, isChecked ->
             CoroutineScope(Dispatchers.IO).launch {
                 if (isChecked) {
@@ -67,6 +71,8 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+
+
 
         leftButton.setOnTouchListener(
             RepeatListener(300, 300,
