@@ -38,9 +38,9 @@ class MainActivity : AppCompatActivity() {
 
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
         var srvUrl = sp.getString("RaspiAddr", "")
-        var RaspiPort = sp.getString("RaspiPort", "")
+        var RaspiPort = sp.getInt("RaspiPort", 0)
         var motionPort = sp.getString("MotionPort", "")
-        if (srvUrl != "" && RaspiPort != "") {
+        if (srvUrl != "" && motionPort != "") {
             webView.settings.apply {
                 javaScriptEnabled = true
                 javaScriptCanOpenWindowsAutomatically = true
@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
+                val os = Socket(srvUrl, RaspiPort).getOutputStream()
                 val pw = PrintWriter(os)
                 while (true) {
                     pw.write(ch.receive())
