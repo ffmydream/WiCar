@@ -1,21 +1,25 @@
 package com.example.wicar
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
-import android.webkit.WebViewClient
-import android.widget.CompoundButton
+import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.PrintWriter
 import java.net.Socket
+
 
 object SrvAngle {
     var hSrvAngle = 90
@@ -23,62 +27,65 @@ object SrvAngle {
 }
 
 class MainActivity : AppCompatActivity() {
-    @SuppressLint("SetJavaScriptEnabled")
+
+    private val ch = Channel<String>(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        val pref=Preference.DEFAULT_ORDER
-        val srvUrl="192.168.1.166"
-        val motionPort="8081"
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val ch = Channel<String>(0)
-        
-        webView.settings.apply {
-            javaScriptEnabled = true
-            javaScriptCanOpenWindowsAutomatically = true
-            allowFileAccess = true // 设置允许访问文件数据
-            setSupportZoom(false)
-            builtInZoomControls = true
-            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-            domStorageEnabled = true
-            databaseEnabled = true
-            useWideViewPort = true
-            loadWithOverviewMode = true
-        }
-        webView.webChromeClient = WebChromeClient()
-        webView.loadUrl("http://$srvUrl:$motionPort/")
-        camSwitch.setOnCheckedChangeListener { _, isChecked ->
-            CoroutineScope(Dispatchers.IO).launch {
-                if (isChecked) {
-                    ch.send("cmd:sudo motion:0:")
-                } else {
-                    ch.send("cmd:sudo pkill -KILL motion:0:")
-                }
+
+
+        val sp = PreferenceManager.getDefaultSharedPreferences(this)
+        var srvUrl = sp.getString("RaspiAddr", "")
+        var RaspiPort = sp.getString("RaspiPort", "")
+        var motionPort = sp.getString("MotionPort", "")
+        if (srvUrl != "" && RaspiPort != "") {
+            webView.settings.apply {
+                javaScriptEnabled = true
+                javaScriptCanOpenWindowsAutomatically = true
+                allowFileAccess = true // 设置允许访问文件数据
+                setSupportZoom(false)
+                builtInZoomControls = true
+                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                domStorageEnabled = true
+                databaseEnabled = true
+                useWideViewPort = true
+                loadWithOverviewMode = true
             }
+            webView.webChromeClient = WebChromeClient()
+            webView.loadUrl("http://$srvUrl:$motionPort/")
+        } else
+        {
+            Toast.makeText(this,"服务器IP或端口没有设置，摄像头未能打开.",Toast.LENGTH_SHORT).show()
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-
             try {
-                val os = Socket("192.168.1.166", 50000).getOutputStream()
+                val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
                 val pw = PrintWriter(os)
                 while (true) {
                     pw.write(ch.receive())
                     pw.flush()
+                    delay(10)
                 }
             } catch (e: Exception) {
             } finally {
-
             }
         }
 
-
+        floatingActionButton.setOnClickListener() {
+            val intent = Intent()
+            intent.setClass(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
 
         leftButton.setOnTouchListener(
             RepeatListener(300, 300,
                 View.OnClickListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         ch.send("car:left:100:")
+
                     }
                 })
         )
@@ -158,4 +165,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val mListener =
+        OnSharedPreferenceChangeListener { sharedPreferences, key ->
+            when (key) {
+                "motionOn" -> {
+                    val b = sharedPreferences.getBoolean(key, false)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        if (b)
+                            ch.send("cmd:sudo motion:0:")
+                        else
+                            ch.send("cmd:sudo pkill -KILL motion:0:")
+                    }
+                }
+            }
+        }
+
+    override fun onResume() {
+        PreferenceManager.getDefaultSharedPreferences(applicationContext)
+            .registerOnSharedPreferenceChangeListener(mListener)
+        super.onResume()
+
+    }
 }

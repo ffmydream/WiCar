@@ -1,10 +1,15 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="@string/messages_header">
 
         <EditTextPreference
-            app:key="signature"
+            app:key="RaspiAddr"
             app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="RaspiPort"
+            app:title="端口"
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
@@ -17,18 +22,71 @@
 
     </PreferenceCategory>
 
+
+    <PreferenceCategory app:title="纵向舵机">
+
+    <EditTextPreference
+        app:key="Vsrvo"
+        app:title="纵向舵机最大转角"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        app:key="VsrvoStep"
+        app:title="纵向舵机步进角"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        app:key="Vinterval"
+        app:title="纵向舵机按钮连续反应间隔.ms"
+        app:useSimpleSummaryProvider="true" />
+</PreferenceCategory>
+
+    <PreferenceCategory app:title="横向舵机">
+        <EditTextPreference
+            app:key="Hsrvo"
+            app:title="横向舵机最大转角"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="HsrvoStep"
+            app:title="横向舵机步进角"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="Hinterval"
+            app:title="横向舵机按钮连续反应间隔.ms"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="马达">
+        <EditTextPreference
+            app:key="Ispeed"
+            app:title="初始占空比.%"
+            app:summary="初始低速，避免电机启动瞬间电流过大"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="MtStep"
+
+            app:title="加速递增.%"
+            app:summary="按下按钮后，每触发一次速度增加"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="MtInterval"
+            app:title="马达按钮连续反应间隔.ms"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/sync_header">
+        <EditTextPreference
+            app:key="MotionPort"
+            app:title="Motion端口"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:id="@+id/motionOnSw"
+            app:key="motionOn"
+            app:title="开启摄像头" />
 
         <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
-
-        <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
+            app:dependency="motionOn"
+            app:key="motionMode"
+            app:summaryOff="按正常速率捕捉画面"
+            app:summaryOn="画面静止时，每秒输出1帧"
+            app:title="Motion功能" />
 
     </PreferenceCategory>
 
