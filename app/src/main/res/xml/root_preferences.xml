@@ -60,6 +60,10 @@
             app:summary="初始低速，避免电机启动瞬间电流过大"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
+            app:key="MaxSpeed"
+            app:title="最大占空比.%"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
             app:key="MtStep"
 
             app:title="加速递增.%"

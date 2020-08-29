@@ -1,8 +1,6 @@
 package com.example.wicar
 
-import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -11,12 +9,14 @@ import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.widget.Toast
-import android.widget.Toast.LENGTH_LONG
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.PrintWriter
 import java.net.Socket
 
@@ -29,40 +29,40 @@ object SrvAngle {
 class MainActivity : AppCompatActivity() {
 
     private val ch = Channel<String>(0)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
-        var srvUrl = sp.getString("RaspiAddr", "")
-        var RaspiPort = sp.getInt("RaspiPort", 0)
-        var motionPort = sp.getString("MotionPort", "")
-        if (srvUrl != "" && motionPort != "") {
-            webView.settings.apply {
-                javaScriptEnabled = true
-                javaScriptCanOpenWindowsAutomatically = true
-                allowFileAccess = true // 设置允许访问文件数据
-                setSupportZoom(false)
-                builtInZoomControls = true
-                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                domStorageEnabled = true
-                databaseEnabled = true
-                useWideViewPort = true
-                loadWithOverviewMode = true
+            var srvUrl = sp.getString("RaspiAddr", "")
+            var RaspiPort = sp.getString("RaspiPort", "")
+            var motionPort = sp.getString("MotionPort", "")
+            if (srvUrl != "" && motionPort != "") {
+                webView.settings.apply {
+                    javaScriptEnabled = true
+                    javaScriptCanOpenWindowsAutomatically = true
+                    allowFileAccess = true // 设置允许访问文件数据
+                    setSupportZoom(false)
+                    builtInZoomControls = true
+                    cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                    domStorageEnabled = true
+                    databaseEnabled = true
+                    useWideViewPort = true
+                    loadWithOverviewMode = true
+                }
+                webView.webChromeClient = WebChromeClient()
+                webView.loadUrl("http://$srvUrl:$motionPort/")
+            } else
+            {
+                Toast.makeText(this,"服务器IP或端口没有设置，摄像头未能打开.",Toast.LENGTH_SHORT).show()
             }
-            webView.webChromeClient = WebChromeClient()
-            webView.loadUrl("http://$srvUrl:$motionPort/")
-        } else
-        {
-            Toast.makeText(this,"服务器IP或端口没有设置，摄像头未能打开.",Toast.LENGTH_SHORT).show()
-        }
 
+        if(srvUrl==""||RaspiPort==""){
+            Toast.makeText(this,"服务器IP或端口没有设置，请检查.",Toast.LENGTH_SHORT).show()
+        }else
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val os = Socket(srvUrl, RaspiPort).getOutputStream()
+                val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
                 val pw = PrintWriter(os)
                 while (true) {
                     pw.write(ch.receive())
@@ -160,7 +160,9 @@ class MainActivity : AppCompatActivity() {
         )
         srvInitButton.setOnClickListener() {
             CoroutineScope(Dispatchers.IO).launch {
-                ch.send("srv:init:0:")
+                SrvAngle.vSrvAngle=90
+                SrvAngle.hSrvAngle=90
+                ch.send("srvo:init:0:")
             }
         }
     }
@@ -184,6 +186,5 @@ class MainActivity : AppCompatActivity() {
         PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .registerOnSharedPreferenceChangeListener(mListener)
         super.onResume()
-
     }
 }
