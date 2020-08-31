@@ -18,6 +18,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.PrintWriter
+import java.net.InetSocketAddress
 import java.net.Socket
 
 
@@ -34,9 +35,34 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
+
             var srvUrl = sp.getString("RaspiAddr", "")
             var RaspiPort = sp.getString("RaspiPort", "")
             var motionPort = sp.getString("MotionPort", "")
+
+            var motionMonitor=false
+        CoroutineScope(Dispatchers.IO).launch {
+            val sc = Socket()
+            try {
+
+                sc.connect(InetSocketAddress(srvUrl,motionPort!!.toInt()), 5000)
+                motionMonitor=  sc.isConnected
+                sp.edit().putBoolean("motionOn",motionMonitor).apply()
+                Log.e("motion","$motionMonitor")
+            } catch (e: Exception) {
+                Log.e("e","$e")
+            } finally {
+                sc.close()
+            }
+        }
+
+
+
+
+
+
+
+
             if (srvUrl != "" && motionPort != "") {
                 webView.settings.apply {
                     javaScriptEnabled = true
@@ -63,8 +89,10 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
+
                 val pw = PrintWriter(os)
                 while (true) {
+        
                     pw.write(ch.receive())
                     pw.flush()
                     delay(10)
@@ -173,10 +201,23 @@ class MainActivity : AppCompatActivity() {
                 "motionOn" -> {
                     val b = sharedPreferences.getBoolean(key, false)
                     CoroutineScope(Dispatchers.IO).launch {
-                        if (b)
+                        if (b){
                             ch.send("cmd:sudo motion:0:")
+                            delay(2000)
+                        }
+
                         else
-                            ch.send("cmd:sudo pkill -KILL motion:0:")
+                            ch.send("cmd:pkill -KILL motion:0:")
+                        delay(2000)
+                    }
+                }
+                "RaspiPW" -> {
+                    val b = sharedPreferences.getBoolean(key, false)
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        if (b)
+                            ch.send("cmd:sudo halt:0:")
+
                     }
                 }
             }

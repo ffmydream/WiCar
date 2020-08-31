@@ -1,8 +1,10 @@
 package com.example.wicar
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 
 class SettingsActivity : AppCompatActivity() {
 

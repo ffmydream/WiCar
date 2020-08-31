@@ -21,7 +21,16 @@
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
+    <PreferenceCategory app:title="树莓派开关机">
 
+        <SwitchPreferenceCompat
+            android:id="@+id/RaspiPW"
+            app:key="RaspiPW"
+            app:title="开关树莓派（HALT）" />
+
+
+
+    </PreferenceCategory>
 
     <PreferenceCategory app:title="纵向舵机">
 
