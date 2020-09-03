@@ -12,14 +12,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.io.PrintWriter
 import java.net.InetSocketAddress
 import java.net.Socket
+import kotlin.coroutines.coroutineContext
 
 
 object SrvAngle {
@@ -27,7 +25,7 @@ object SrvAngle {
     var vSrvAngle = 90
 }
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     private val ch = Channel<String>(0)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,71 +34,62 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val sp = PreferenceManager.getDefaultSharedPreferences(this)
 
-            var srvUrl = sp.getString("RaspiAddr", "")
-            var RaspiPort = sp.getString("RaspiPort", "")
-            var motionPort = sp.getString("MotionPort", "")
+        var srvUrl = sp.getString("RaspiAddr", "")
+        var RaspiPort = sp.getString("RaspiPort", "")
+        var motionPort = sp.getString("MotionPort", "")
 
-            var motionMonitor=false
+        var motionMonitor: Boolean
         CoroutineScope(Dispatchers.IO).launch {
             val sc = Socket()
             try {
 
-                sc.connect(InetSocketAddress(srvUrl,motionPort!!.toInt()), 5000)
-                motionMonitor=  sc.isConnected
-                sp.edit().putBoolean("motionOn",motionMonitor).apply()
-                Log.e("motion","$motionMonitor")
+                sc.connect(InetSocketAddress(srvUrl, motionPort!!.toInt()), 5000)
+                motionMonitor = sc.isConnected
+                sp.edit().putBoolean("motionOn", motionMonitor).apply()
+                Log.e("motion", "$motionMonitor")
             } catch (e: Exception) {
-                Log.e("e","$e")
+                Log.e("e", "$e")
             } finally {
                 sc.close()
             }
         }
 
-
-
-
-
-
-
-
-            if (srvUrl != "" && motionPort != "") {
-                webView.settings.apply {
-                    javaScriptEnabled = true
-                    javaScriptCanOpenWindowsAutomatically = true
-                    allowFileAccess = true // 设置允许访问文件数据
-                    setSupportZoom(false)
-                    builtInZoomControls = true
-                    cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                    domStorageEnabled = true
-                    databaseEnabled = true
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                }
-                webView.webChromeClient = WebChromeClient()
-                webView.loadUrl("http://$srvUrl:$motionPort/")
-            } else
-            {
-                Toast.makeText(this,"服务器IP或端口没有设置，摄像头未能打开.",Toast.LENGTH_SHORT).show()
+        if (srvUrl != "" && motionPort != "") {
+            webView.settings.apply {
+                javaScriptEnabled = true
+                javaScriptCanOpenWindowsAutomatically = true
+                allowFileAccess = true // 设置允许访问文件数据
+                setSupportZoom(false)
+                builtInZoomControls = true
+                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                domStorageEnabled = true
+                databaseEnabled = true
+                useWideViewPort = true
+                loadWithOverviewMode = true
             }
-
-        if(srvUrl==""||RaspiPort==""){
-            Toast.makeText(this,"服务器IP或端口没有设置，请检查.",Toast.LENGTH_SHORT).show()
-        }else
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
-
-                val pw = PrintWriter(os)
-                while (true) {
-        
-                    pw.write(ch.receive())
-                    pw.flush()
-                    delay(10)
-                }
-            } catch (e: Exception) {
-            } finally {
-            }
+            webView.webChromeClient = WebChromeClient()
+            webView.loadUrl("http://$srvUrl:$motionPort/")
+        } else {
+            Toast.makeText(this, "服务器IP或端口没有设置，摄像头未能打开.", Toast.LENGTH_SHORT).show()
         }
+
+        if (srvUrl == "" || RaspiPort == "") {
+            Toast.makeText(this, "服务器IP或端口没有设置，请检查.", Toast.LENGTH_SHORT).show()
+        } else
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val os = Socket(srvUrl, RaspiPort!!.toInt()).getOutputStream()
+
+                    val pw = PrintWriter(os)
+                    while (true) {
+                        pw.write(ch.receive())
+                        pw.flush()
+                        delay(10)
+                    }
+                } catch (e: Exception) {
+                } finally {
+                }
+            }
 
         floatingActionButton.setOnClickListener() {
             val intent = Intent()
@@ -111,9 +100,8 @@ class MainActivity : AppCompatActivity() {
         leftButton.setOnTouchListener(
             RepeatListener(300, 300,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         ch.send("car:left:100:")
-
                     }
                 })
         )
@@ -121,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         rightButton.setOnTouchListener(
             RepeatListener(300, 300,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         ch.send("car:right:100:")
                     }
                 })
@@ -129,7 +117,7 @@ class MainActivity : AppCompatActivity() {
         forButton.setOnTouchListener(
             RepeatListener(300, 300,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         ch.send("car:for:100:")
                     }
                 })
@@ -137,7 +125,7 @@ class MainActivity : AppCompatActivity() {
         backButton.setOnTouchListener(
             RepeatListener(300, 300,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         ch.send("car:back:100:")
                     }
                 })
@@ -145,7 +133,7 @@ class MainActivity : AppCompatActivity() {
         srvLeftButton.setOnTouchListener(
             RepeatListener(300, 50,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         if (SrvAngle.hSrvAngle > 3)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle - 2
                         ch.send("srvo:horiz:${SrvAngle.hSrvAngle}:")
@@ -156,7 +144,7 @@ class MainActivity : AppCompatActivity() {
         srvRightButton.setOnTouchListener(
             RepeatListener(300, 50,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         if (SrvAngle.hSrvAngle < 177)
                             SrvAngle.hSrvAngle = SrvAngle.hSrvAngle + 2
                         ch.send("srvo:horiz:${SrvAngle.hSrvAngle}:")
@@ -167,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         srvUpButton.setOnTouchListener(
             RepeatListener(300, 50,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         if (SrvAngle.vSrvAngle < 170)
                             SrvAngle.vSrvAngle = SrvAngle.vSrvAngle + 2
                         ch.send("srvo:vertic:${SrvAngle.vSrvAngle}:")
@@ -175,21 +163,23 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
         )
+        Log.i("context", "$coroutineContext")
         srvDownButton.setOnTouchListener(
             RepeatListener(300, 50,
                 View.OnClickListener {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         if (SrvAngle.vSrvAngle > 60)
                             SrvAngle.vSrvAngle = SrvAngle.vSrvAngle - 2
+                        textView.text = SrvAngle.vSrvAngle.toString()
                         ch.send("srvo:vertic:${SrvAngle.vSrvAngle}:")
                         delay(5)
                     }
                 })
         )
         srvInitButton.setOnClickListener() {
-            CoroutineScope(Dispatchers.IO).launch {
-                SrvAngle.vSrvAngle=90
-                SrvAngle.hSrvAngle=90
+            launch {
+                SrvAngle.vSrvAngle = 90
+                SrvAngle.hSrvAngle = 90
                 ch.send("srvo:init:0:")
             }
         }
@@ -200,24 +190,20 @@ class MainActivity : AppCompatActivity() {
             when (key) {
                 "motionOn" -> {
                     val b = sharedPreferences.getBoolean(key, false)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        if (b){
+                    launch {
+                        if (b) {
                             ch.send("cmd:sudo motion:0:")
                             delay(2000)
-                        }
-
-                        else
+                        } else
                             ch.send("cmd:pkill -KILL motion:0:")
                         delay(2000)
                     }
                 }
                 "RaspiPW" -> {
                     val b = sharedPreferences.getBoolean(key, false)
-
-                    CoroutineScope(Dispatchers.IO).launch {
+                    launch {
                         if (b)
                             ch.send("cmd:sudo halt:0:")
-
                     }
                 }
             }

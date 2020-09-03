@@ -147,4 +147,13 @@
         android:clickable="true"
         app:srcCompat="@android:drawable/ic_menu_add" />
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:textColor="#D5D5D5"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
